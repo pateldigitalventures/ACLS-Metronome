@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACLS Metronome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        #visual-indicator {
+            transition: background-color 0.05s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-[#1c1c1e] text-white flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-sm mx-auto p-4">
+        <div class="space-y-6">
+            <!-- Header -->
+            <header class="w-full bg-[#2c2c2e] py-4 rounded-xl border border-[#3a3a3c]">
+                <h1 class="text-white text-xl font-semibold text-center">ACLS Metronome</h1>
+            </header>
+
+            <!-- Main Content -->
+            <main class="w-full space-y-6">
+                <!-- CPR Rate Display -->
+                <div class="bg-[#2c2c2e] rounded-2xl p-6 flex flex-col items-center border border-[#3a3a3c]">
+                    <p class="text-[#a0a0a5] text-lg">Compression Rate</p>
+                    <p class="text-white font-bold text-7xl">
+                        <span id="rate-value">110</span>
+                        <span class="text-2xl font-medium text-[#a0a0a5]">cpm</span>
+                    </p>
+                    <div id="visual-indicator" class="w-8 h-8 rounded-full bg-[#4d4d50] mt-4"></div>
+                </div>
+
+                <!-- Rate Adjustment -->
+                <div class="flex items-center justify-between w-full px-4">
+                    <button id="decrease-speed" class="bg-[#3a3a3c] rounded-xl p-4 text-xl font-bold w-16 h-16 flex items-center justify-center">-</button>
+                    <p class="text-[#a0a0a5] text-base">Adjust Rate</p>
+                    <button id="increase-speed" class="bg-[#3a3a3c] rounded-xl p-4 text-xl font-bold w-16 h-16 flex items-center justify-center">+</button>
+                </div>
+
+                <!-- Start/Stop Button -->
+                <button id="start-stop-button" class="w-full py-5 rounded-2xl text-2xl font-bold tracking-wider transition-colors bg-blue-600 hover:bg-blue-700">
+                    START
+                </button>
+
+                <!-- 2-Minute Cycle Timer -->
+                <div class="bg-[#2c2c2e] rounded-2xl p-6 flex flex-col items-center border border-[#3a3a3c]">
+                    <p class="text-[#a0a0a5] text-lg mb-2">2-Min Cycle Timer</p>
+                    <p id="timer-display" class="text-white font-semibold text-6xl tabular-nums">2:00</p>
+                    <button id="reset-timer-button" class="mt-4 bg-[#3a3a3c] text-white font-medium py-3 px-8 rounded-xl">
+                        Reset Timer
+                    </button>
+                </div>
+            </main>
+
+            <!-- Footer for Disclaimer Link -->
+            <footer class="text-center mt-4">
+                <button id="disclaimer-link" class="text-gray-500 hover:text-gray-400 text-sm underline">Disclaimer</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimer-modal" style="display: none;" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto border border-[#3a3a3c]">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">Disclaimer</h2>
+                <button id="close-modal-button" class="text-gray-400 text-2xl font-bold hover:text-white">&times;</button>
+            </div>
+            <div class="text-gray-300 space-y-4 text-sm">
+                <p class="font-bold">For Educational and Training Purposes Only</p>
+                <p>This ACLS Metronome application ("the App") is intended for educational and training purposes only. It is designed to be used as a supplementary tool for individuals trained in Advanced Cardiac Life Support (ACLS) and Basic Life Support (BLS) to practice and reinforce their skills in a simulated environment.</p>
+                
+                <p class="font-bold mt-4">Not a Medical Device</p>
+                <p>The App is NOT a certified medical device and has not been approved by the Food and Drug Administration (FDA) or any other regulatory body. It should NEVER be used in a real medical emergency, for actual patient care, diagnosis, or treatment. Using this App on a real patient could result in harm or death.</p>
+                
+                <p class="font-bold mt-4">No Guarantee of Accuracy</p>
+                <p>While every effort has been made to ensure the accuracy of the metronome and timers within the App, the developer makes no warranty or guarantee, express or implied, as to its reliability, accuracy, or completeness. Medical guidelines (such as those from the American Heart Association) can change. It is the user's sole responsibility to stay informed of and adhere to the most current and official resuscitation guidelines.</p>
+                
+                <p class="font-bold mt-4">Assumption of Risk & Limitation of Liability</p>
+                <p>By using this App, you acknowledge and agree that you are doing so at your own risk. You are solely responsible for how you use the App and for any outcomes that may result from its use.</p>
+                <p>In no event shall the developer of this App be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, personal injury, death, or property damage) arising in any way out of the use of this App, even if advised of the possibility of such damage.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const rateValueEl = document.getElementById('rate-value');
+        const visualIndicatorEl = document.getElementById('visual-indicator');
+        const decreaseSpeedBtn = document.getElementById('decrease-speed');
+        const increaseSpeedBtn = document.getElementById('increase-speed');
+        const startStopBtn = document.getElementById('start-stop-button');
+        const timerDisplayEl = document.getElementById('timer-display');
+        const resetTimerBtn = document.getElementById('reset-timer-button');
+        const disclaimerLink = document.getElementById('disclaimer-link');
+        const disclaimerModal = document.getElementById('disclaimer-modal');
+        const closeModalBtn = document.getElementById('close-modal-button');
+
+        // --- State Variables ---
+        let metronomeOn = false;
+        let compressionsPerMinute = 110;
+        let cycleTimer = 120; // 2 minutes in seconds
+        let isTimerRunning = false;
+        
+        // --- Interval References ---
+        let metronomeInterval = null;
+        let timerInterval = null;
+
+        // --- Web Audio API Setup for sound ---
+        let audioContext;
+        
+        function initAudio() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error("Web Audio API is not supported in this browser");
+                }
+            }
+        }
+
+        function playBeep() {
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
+
+        // --- Core Metronome Functions ---
+        
+        function updateRateDisplay() {
+            rateValueEl.textContent = compressionsPerMinute;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        }
+
+        function startMetronome() {
+            if (metronomeInterval) clearInterval(metronomeInterval);
+            const intervalTime = 60000 / compressionsPerMinute;
+            metronomeInterval = setInterval(() => {
+                playBeep();
+                visualIndicatorEl.style.backgroundColor = '#00c853';
+                setTimeout(() => {
+                    visualIndicatorEl.style.backgroundColor = '#4d4d50';
+                }, 100);
+            }, intervalTime);
+        }
+
+        function stopMetronome() {
+            clearInterval(metronomeInterval);
+            metronomeInterval = null;
+            visualIndicatorEl.style.backgroundColor = '#4d4d50';
+        }
+
+        function startCycleTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            if (cycleTimer === 0) cycleTimer = 120;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                cycleTimer--;
+                timerDisplayEl.textContent = formatTime(cycleTimer);
+                if (cycleTimer <= 0) {
+                    stopCycleTimer();
+                }
+            }, 1000);
+        }
+
+        function stopCycleTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            isTimerRunning = false;
+        }
+
+        // --- Event Handlers ---
+        function handleStartStop() {
+            initAudio();
+            metronomeOn = !metronomeOn;
+            if (metronomeOn) {
+                startStopBtn.textContent = 'STOP';
+                startStopBtn.classList.replace('bg-blue-600', 'bg-red-600');
+                startStopBtn.classList.replace('hover:bg-blue-700', 'hover:bg-red-700');
+                startMetronome();
+                startCycleTimer();
+            } else {
+                startStopBtn.textContent = 'START';
+                startStopBtn.classList.replace('bg-red-600', 'bg-blue-600');
+                startStopBtn.classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
+                stopMetronome();
+                stopCycleTimer();
+            }
+        }
+
+        function changeSpeed(amount) {
+            const newSpeed = compressionsPerMinute + amount;
+            if (newSpeed >= 100 && newSpeed <= 120) {
+                compressionsPerMinute = newSpeed;
+                updateRateDisplay();
+                if (metronomeOn) {
+                    startMetronome();
+                }
+            }
+        }
+
+        function handleResetTimer() {
+            stopCycleTimer();
+            cycleTimer = 120;
+            timerDisplayEl.textContent = formatTime(cycleTimer);
+            if (metronomeOn) {
+                startCycleTimer();
+            }
+        }
+
+        // --- Modal Handlers ---
+        function showDisclaimer() {
+            disclaimerModal.style.display = 'flex';
+        }
+
+        function hideDisclaimer() {
+            disclaimerModal.style.display = 'none';
+        }
+
+        // --- Event Listeners ---
+        startStopBtn.addEventListener('click', handleStartStop);
+        decreaseSpeedBtn.addEventListener('click', () => changeSpeed(-5));
+        increaseSpeedBtn.addEventListener('click', () => changeSpeed(5));
+        resetTimerBtn.addEventListener('click', handleResetTimer);
+        disclaimerLink.addEventListener('click', showDisclaimer);
+        closeModalBtn.addEventListener('click', hideDisclaimer);
+        
+        // Add event listener to the modal background to also close it
+        disclaimerModal.addEventListener('click', function(event) {
+            if (event.target === disclaimerModal) {
+                hideDisclaimer();
+            }
+        });
+
+        // --- Initial Setup ---
+        updateRateDisplay();
+        timerDisplayEl.textContent = formatTime(cycleTimer);
+    </script>
+</body>
+</html>
